@@ -1,0 +1,5 @@
+{
+  "name": "Old Books Marketplace",
+  "description": "A marketplace for buying and selling old books, including a seller dashboard, buyer list, bargaining, and a donation section.",
+  "requestFramePermissions": ["camera"]
+}

@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "akshatshukla2021@gmail.com" && request.auth.token.email_verified == true));
+    }
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['seller', 'buyer'];
+    }
+    function isValidBook(data) {
+      return data.keys().hasAll(['id', 'sellerId', 'title', 'price', 'category', 'status']) &&
+             data.id is string &&
+             data.sellerId is string &&
+             data.title is string &&
+             data.price is number &&
+             data.category is string &&
+             data.status in ['available', 'sold', 'pending'];
+    }
+    function isValidOffer(data) {
+      return data.keys().hasAll(['id', 'bookId', 'buyerId', 'sellerId', 'offeredPrice', 'status']) &&
+             data.id is string &&
+             data.bookId is string &&
+             data.buyerId is string &&
+             data.sellerId is string &&
+             data.offeredPrice is number &&
+             data.status in ['pending', 'accepted', 'rejected'];
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(uid) && isValidUser(request.resource.data);
+      allow update: if isOwner(uid) && isValidUser(request.resource.data);
+    }
+
+    match /books/{bookId} {
+      allow read: if true; // Allow anyone to browse books
+      allow create: if isAuthenticated() && isValidBook(request.resource.data) && request.resource.data.sellerId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        (resource.data.sellerId == request.auth.uid && isValidBook(request.resource.data)) ||
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (resource.data.sellerId == request.auth.uid || isAdmin());
+    }
+
+    match /offers/{offerId} {
+      allow read: if isAuthenticated() && (
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid || 
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && isValidOffer(request.resource.data) && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        (resource.data.buyerId == request.auth.uid && isValidOffer(request.resource.data)) ||
+        (resource.data.sellerId == request.auth.uid && isValidOffer(request.resource.data)) ||
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (resource.data.buyerId == request.auth.uid || isAdmin());
+    }
+  }
+}

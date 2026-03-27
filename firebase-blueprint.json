@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents a user (seller or buyer) in the marketplace.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique ID of the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "role": { "type": "string", "enum": ["seller", "buyer"], "description": "The role of the user." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "Represents a book listed for sale or donation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique ID of the book listing." },
+        "sellerId": { "type": "string", "description": "The UID of the seller who listed the book." },
+        "title": { "type": "string", "description": "The title of the book." },
+        "author": { "type": "string", "description": "The author of the book." },
+        "price": { "type": "number", "description": "The price of the book (0 if donation)." },
+        "category": { "type": "string", "description": "The category (e.g., class-wise, language, competitive)." },
+        "board": { "type": "string", "description": "The board (CBSE, ICSE, UP Board)." },
+        "class": { "type": "string", "description": "The class (9, 10, 11, 12)." },
+        "images": {
+          "type": "object",
+          "properties": {
+            "front": { "type": "string", "description": "Base64 or URL of the front image." },
+            "back": { "type": "string", "description": "Base64 or URL of the back image." },
+            "side": { "type": "string", "description": "Base64 or URL of the side image." },
+            "open": { "type": "string", "description": "Base64 or URL of an open book image." }
+          }
+        },
+        "status": { "type": "string", "enum": ["available", "sold", "pending"], "description": "The current status of the book." },
+        "isDonation": { "type": "boolean", "description": "Whether the book is for donation." },
+        "pdfUrl": { "type": "string", "description": "URL to the PDF if it's a digital resource." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the book was listed." }
+      },
+      "required": ["id", "sellerId", "title", "price", "category", "status"]
+    },
+    "Offer": {
+      "title": "Offer",
+      "description": "Represents a bargain offer from a buyer to a seller.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique ID of the offer." },
+        "bookId": { "type": "string", "description": "The ID of the book being bargained for." },
+        "buyerId": { "type": "string", "description": "The UID of the buyer making the offer." },
+        "sellerId": { "type": "string", "description": "The UID of the seller receiving the offer." },
+        "offeredPrice": { "type": "number", "description": "The price offered by the buyer." },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected"], "description": "The status of the offer." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the offer was made." }
+      },
+      "required": ["id", "bookId", "buyerId", "sellerId", "offeredPrice", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": { "schema": "User", "description": "User profiles." },
+    "/books/{bookId}": { "schema": "Book", "description": "Book listings." },
+    "/offers/{offerId}": { "schema": "Offer", "description": "Bargain offers." }
+  }
+}
